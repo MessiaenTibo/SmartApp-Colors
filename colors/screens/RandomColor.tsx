@@ -12,6 +12,8 @@ import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 const circleSize = Math.sqrt(Math.pow(Dimensions.get('window').width,2)+ Math.pow(Dimensions.get('window').height,2))*2
 
 export default () => {
+    const [textColor, setTextColor] = useState<'black' | 'white'>('black')
+
     const {navigate} = useNavigation<StackNavigationProp<ParamListBase>>()
     const {getRandomColor} = useRandomColor()
 
@@ -26,6 +28,7 @@ export default () => {
     const [scale] = useState<Animated.Value>(new Animated.Value(0))
     const [fade] = useState<Animated.Value>(new Animated.Value(1))
 
+
     const fadeInText = () => {
         fade.setValue(0)
         Animated.timing(fade, {
@@ -34,6 +37,18 @@ export default () => {
             useNativeDriver: true,
             easing: Easing.quad
         }).start()
+    }
+
+    const handleTextColor = (newColor:IColor) => {
+        //change text color if background is to dark or light
+        const temp = newColor.rgb.split('(').map((value) => value) // remove rgb(
+        const rgb = temp[1].split(',').map((value) => parseInt(value)) // remove ) and split rgb values
+        const brightness = Math.round(((rgb[0] * 299) + (rgb[1] * 587) + (rgb[2] * 114)) / 1000) // calculate brightness
+        if(brightness > 125){ // if brightness is to high
+            setTextColor('black')
+        }else{ // if brightness is to low
+            setTextColor('white')
+        }
     }
 
 
@@ -57,6 +72,7 @@ export default () => {
             easing: Easing.quad
         }).start(() =>{
             //even when animation is done
+            handleTextColor(newColor)
             SetBackgroundColor(newColor!)
             fadeInText()
             scale.setValue(0)
@@ -67,14 +83,14 @@ export default () => {
     return (
         <Pressable onPress={handleNewColor} style={[styles.container,{backgroundColor: backgroundColor.hex}]}>
             <Animated.View style={{opacity:fade}}>
-                <Text style={styles.name}>{backgroundColor.name}</Text>
-                <Text style={styles.rgb}>{backgroundColor.rgb}</Text>
-                <Text style={styles.hex}>{backgroundColor.hex}</Text>
+                <Text style={[styles.name,{color:textColor}]}>{backgroundColor.name}</Text>
+                <Text style={[styles.rgb,{color:textColor}]}>{backgroundColor.rgb}</Text>
+                <Text style={[styles.hex,{color:textColor}]}>{backgroundColor.hex}</Text>
 
-                <Text style={styles.info}>Tab anywhere to get a new color.</Text>
+                <Text style={[styles.info,{color:textColor}]}>Tab anywhere to get a new color.</Text>
 
                 <Pressable onPress={() => {navigate('Settings')}} style={null}>
-                    <Text style={styles.settings}>Go to settings</Text>
+                    <Text style={[styles.settings,{color:textColor}]}>Go to settings</Text>
                 </Pressable>
             </Animated.View>
 
